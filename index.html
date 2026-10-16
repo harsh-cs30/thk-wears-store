@@ -1,0 +1,299 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>THK_Wears | Official Store</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #171717;
+      background: #f5f5f5;
+    }
+
+    header {
+      background: #111;
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h2 { margin: 0; letter-spacing: 2px; }
+
+    .cart-button {
+      background: white;
+      color: black;
+      border: 0;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 50px 15px;
+      background: #e7e7e7;
+    }
+
+    .hero h1 { font-size: clamp(28px, 5vw, 48px); }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px;
+      padding: 25px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .product, #cart {
+      background: white;
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .product img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      border-radius: 7px;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 10px;
+      margin: 7px 0;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 12px;
+      border: 0;
+      border-radius: 5px;
+      background: #111;
+      color: white;
+    }
+
+    .product button { width: 100%; }
+
+    #cart {
+      max-width: 700px;
+      margin: 20px auto;
+    }
+
+    .cart-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .remove {
+      background: #eee;
+      color: #111;
+      margin-top: 8px;
+    }
+
+    .checkout {
+      background: #168447;
+      width: 100%;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      background: #111;
+      color: white;
+      padding: 25px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h2>THK_Wears</h2>
+    <button class="cart-button"
+      onclick="document.getElementById('cart').scrollIntoView()">
+      Cart (<span id="cart-count">0</span>)
+    </button>
+  </header>
+
+  <section class="hero">
+    <h1>Wear Your Story.</h1>
+    <p>Discover original designs from THK_Wears.</p>
+  </section>
+
+  <h2 style="text-align:center;">Our Collection</h2>
+  <section class="products" id="products"></section>
+
+  <section id="cart">
+    <h2>Your Shopping Cart</h2>
+    <div id="cart-items">Your cart is empty.</div>
+    <h3 id="cart-total">Total: ₹0</h3>
+    <button class="checkout" onclick="checkout()">
+      Order on WhatsApp
+    </button>
+  </section>
+
+  <footer>
+    <p>THK_Wears — Independent style, original designs.</p>
+    <p>Follow us on Instagram</p>
+  </footer>
+
+  <script>
+    // Replace this with your WhatsApp number.
+    // Use country code 91, without + or spaces.
+    const whatsappNumber = "917016735456";
+
+    // Sample products. Change names, prices and photos
+    // to your actual THK_Wears products.
+    const products = [
+      {
+        id: 1,
+        name: "Gujarat Heritage Tee",
+        price: 599,
+        image:  "images/gujarat-tee.png"
+      },
+      {
+        id: 2,
+        name: "THK Graphic Tee",
+        price: 499,
+        image: "images/black-tee.png"
+      }
+    ];
+
+    let cart = JSON.parse(localStorage.getItem("thkCart") || "[]");
+
+    const productArea = document.getElementById("products");
+
+    products.forEach(product => {
+      const card = document.createElement("article");
+      card.className = "product";
+
+      card.innerHTML = `
+        <img src="${product.image}" alt="${product.name}">
+        <h3>${product.name}</h3>
+        <p>₹${product.price}</p>
+
+        <label>Colour</label>
+        <select class="colour">
+          <option>Black</option>
+          <option>White</option>
+          <option>Beige</option>
+        </select>
+
+        <label>Size</label>
+        <select class="size">
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="XXL">XXL</option>
+        </select>
+
+        <label>Quantity</label>
+        <input class="quantity" type="number"
+          min="1" max="10" value="1">
+
+        <button class="add">Add to Cart</button>
+      `;
+
+      card.querySelector(".add").addEventListener("click", () => {
+        const colour = card.querySelector(".colour").value;
+        const size = card.querySelector(".size").value;
+        const quantity = Number(card.querySelector(".quantity").value);
+
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+          alert("Choose a quantity from 1 to 10.");
+          return;
+        }
+
+        cart.push({
+          ...product,
+          colour,
+          size,
+          quantity
+        });
+
+        renderCart();
+        alert("Added to your cart!");
+      });
+
+      productArea.appendChild(card);
+    });
+
+    function renderCart() {
+      const cartItems = document.getElementById("cart-items");
+      cartItems.innerHTML = "";
+
+      if (cart.length === 0) {
+        cartItems.textContent = "Your cart is empty.";
+      }
+
+      cart.forEach((item, index) => {
+        const row = document.createElement("div");
+        row.className = "cart-item";
+
+        const description = document.createElement("p");
+        description.textContent =
+          `${item.name} | ${item.colour} | Size ${item.size} | Qty ${item.quantity} | ₹${item.price * item.quantity}`;
+
+        const removeButton = document.createElement("button");
+        removeButton.className = "remove";
+        removeButton.textContent = "Remove";
+        removeButton.onclick = () => {
+          cart.splice(index, 1);
+          renderCart();
+        };
+
+        row.append(description, removeButton);
+        cartItems.appendChild(row);
+      });
+
+      const total = cart.reduce(
+        (sum, item) => sum + item.price * item.quantity, 0
+      );
+
+      document.getElementById("cart-total").textContent =
+        "Total: ₹" + total;
+
+      document.getElementById("cart-count").textContent =
+        cart.reduce((sum, item) => sum + item.quantity, 0);
+        localStorage.setItem("thkCart", JSON.stringify(cart));
+    }
+
+    function checkout() {
+      if (cart.length === 0) {
+        alert("Please add a product to your cart first.");
+        return;
+      }
+
+      const total = cart.reduce(
+        (sum, item) => sum + item.price * item.quantity, 0
+      );
+
+      let message = "Hello THK_Wears! I want to place an order:\n\n";
+
+      cart.forEach(item => {
+        message +=
+          `${item.name} - ${item.colour}, Size ${item.size}, Qty ${item.quantity} - ₹${item.price * item.quantity}\n`;
+      });
+
+      message += `\nTotal: ₹${total}\nPlease confirm availability and delivery charges.`;
+
+      const link = "https://wa.me/" + whatsappNumber +
+        "?text=" + encodeURIComponent(message);
+
+      window.open(link, "_blank");
+    }
+    renderCart();
+  </script>
+</body>
+</html>
